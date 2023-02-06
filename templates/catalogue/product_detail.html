@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block context %}
+    {# for pi in product.images.all #}
+<!--    <img src="{{ pi.image.url }}">-->
+    {# endfor #}
+    <h3> {{ product.title }}</h3>
+    <p> {{ product.description }}</p>
+    <p>{{ product.stock.price }}</p>
+    <form method="post" action="{% url 'add-to-basket' %}">
+        {% csrf_token %}
+        {{form.as_p}}
+<!--        <input type="hidden" name="product_id" value="{{product.id}}">-->
+        <input type="hidden" name="next" value="{{request.build_absolute_uri}}">
+        <button type="submit" > Add To Basket </button>
+    </form>
+{% endblock %}
+{% block title %}
+    {{product.title}}
+{% endblock %}

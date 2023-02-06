@@ -1,6 +1,10 @@
 from django.db import models
 
 
+class ManagerCustom(models.Manager):
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).filter(is_active=True)
+
 class ProductType(models.Model):
     name = models.CharField(max_length=32, blank=True, null=True)
 
@@ -34,13 +38,19 @@ class ProductAttribute(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=32)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='children', null=True, blank=True)
-
+    is_active = models.BooleanField(default=True)
+    default_manager = models.Manager()
+    objects = ManagerCustom()
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
 
     def __str__(self):
-        return self.name
+        return f"{self.name}"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('category-detail', args=[self.pk])
 
 class Brand(models.Model):
     name = models.CharField(max_length=32)
@@ -59,6 +69,16 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.title
+
+    def stock(self):
+        return self.partners.all().order_by('price').first()
+
+class ProductImage(models.Model):
+    image = models.ImageField(upload_to='products/')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+
+    def __str__(self):
+        return str(self.product)
 
 class ProductAttributeValue(models.Model):
     product_attribute = models.ForeignKey(ProductAttribute, on_delete=models.PROTECT, related_name='values')

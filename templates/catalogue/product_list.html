@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block context %}
+    <h2>Hi {{ request.user.username }}, List Products : </h2>
+    {% for product in products %}
+    <a href="{% url 'product-detail' product.pk %}">{{ product.title }}</a><br>
+    <h4>{% if product.is_active %} Available {% else %} Not Available{% endif %}</h4>
+        {% if product.stock %}
+          <h4>${{ product.stock.price}}</h4>
+        {% endif%}
+    {% endfor %}
+{% endblock %}
+
+{% block title %}
+    {{product.title}}
+{% endblock %}

@@ -1,13 +1,15 @@
 from django.contrib import admin
 from django.contrib.admin import register
 
-from catalogue.models import Category, Brand ,Product, ProductType, ProductAttribute
+from catalogue.models import Category, Brand, Product, ProductType, ProductAttribute, ProductImage
 
-# Register your models here.
 
 class ProductAttributeInline(admin.TabularInline):
     model = ProductAttribute
     extra = 1
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
 
 @register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -17,6 +19,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['upc', 'title', 'category__name']
     list_editable = ['is_active']
     actions = ['active_all']
+    inlines = [ProductImageInline]
 
     def active_all(self, request, queryset):
         pass
@@ -30,10 +33,17 @@ class ProductAdmin(admin.ModelAdmin):
     # def has_view_permission(self, request, obj=None):
     #     return False
 
+@register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active', 'parent']
+    
+    list_editable = ['is_active']
 
 @register(ProductAttribute)
 class ProductAttributeAdmin(admin.ModelAdmin):
     list_display = ['title', 'product_type', 'attribute_type']
+
+
 
 @register(ProductType)
 class ProductTypeAdmin(admin.ModelAdmin):
@@ -41,7 +51,6 @@ class ProductTypeAdmin(admin.ModelAdmin):
     inlines = [ProductAttributeInline]
 
 
-admin.site.register(Category)
 admin.site.register(Brand)
 # admin.site.register(Product, ProductAdmin)
 # admin.site.register(ProductType)

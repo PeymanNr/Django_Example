@@ -1,11 +1,12 @@
+from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 
+from basket.forms import AddToBasketForm
 from catalogue.models import Product, Category
-
-
-# Create your views here.
+from catalogue.utils import check_is_active
 
 
 def catalogue_list(request):
@@ -24,18 +25,19 @@ def archive_post(request, year):
     return HttpResponse(f"post Archive For Year {year}")
 
 def product_list(request):
-    products = Product.objects.select_related('category').all()
-    context = "\n".join([f'{product.title}, {product.upc}, {product.category.name}' for product in products])
-    return HttpResponse(context)
+    context = dict()
+    context['products'] = Product.objects.select_related('category').all()
+    # context = "\n".join([f'{product.title}, {product.upc}, {product.category.name}' for product in products])
+    # return HttpResponse(context)
+    return render(request, 'catalogue/product_list.html', context=context)
 
 def product_detail(request, pk):
-    # product = Product.objects.get(pk=pk)
-    # return HttpResponse(f"title: {product.title}")
     queryset = Product.objects.filter(is_active=True).filter(Q(pk=pk) | Q(upc=pk))
     if queryset.exists():
         product = queryset.first()
-        return HttpResponse(f"title: {product.title}")
-    return HttpResponse("Products does not exist")
+        form = AddToBasketForm({"product": product.id, "quantity": 1})
+        return render(request, 'catalogue/product_detail.html', {"product":product, "form":form})
+    raise Http404
 
 def category_products(request, pk):
     try:
@@ -45,3 +47,17 @@ def category_products(request, pk):
     products = category.products.all()
     context = "\n".join([f'{product.title}, {product.upc}' for product in products])
     return HttpResponse(context)
+
+def product_search(request):
+    title = request.GET.get('q')
+
+    products = Product.objects.all().filter(title__icontains=title, is_active=True)
+    context = "\n".join([f'{product.title}, {product.upc}' for product in products])
+    return HttpResponse(f"Search page:\n{context}")
+
+@login_required
+@require_http_methods(request_method_list=['POST', 'GET'])
+# @user_passes_test(check_is_active)
+# @permission_required('has_score_permission')
+def user_profile(request):
+    return HttpResponse(f"hello {request.user.username}")

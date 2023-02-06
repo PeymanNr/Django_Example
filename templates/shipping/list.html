@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %} Add new shipping address {% endblock %}
+
+{% block context %}
+<ul>
+    {%for i in object_list %}
+    <li>{{i.zipcode}} -  {{i.number}} -- {{i.city}}</li>
+    {%endfor%}
+</ul>
+<a href="{% url 'address-create' %}"> Add New Address</a>
+{% endblock %}
